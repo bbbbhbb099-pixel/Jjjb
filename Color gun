@@ -1,0 +1,599 @@
+-- Owner ID: nhiiz_matacc
+-- LIGHTSCOPE (Yellow + Matte White) & GREENSCOPE (Green + Matte White) + Dual-Color Neon Bullets
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+if PlayerGui:FindFirstChild("NhiizScopeHubGUI") then
+	PlayerGui.NhiizScopeHubGUI:Destroy()
+end
+
+local OWNER_ID = "nhiiz_matacc"
+local CurrentStyle = "NORMAL"
+local ActiveGunTool = nil
+
+local MATTE_WHITE = Color3.fromRGB(248, 250, 252)
+local MATTE_WHITE_MAT = Enum.Material.SmoothPlastic
+local SILVER_IRON = Color3.fromRGB(175, 182, 190)
+local DARK_IRON = Color3.fromRGB(72, 76, 82)
+
+local STYLES = {
+	{ Name = "NORMAL",        Primary = Color3.fromRGB(58, 62, 68),    Secondary = SILVER_IRON,       Barrel = DARK_IRON,   Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.SmoothPlastic, BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "REDSCOPE",      Primary = Color3.fromRGB(210, 25, 45),   Secondary = Color3.fromRGB(255, 120, 140), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "REDSCOPEV2",    Primary = Color3.fromRGB(235, 35, 80),   Secondary = Color3.fromRGB(255, 185, 200), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "BLUESCOPE",     Primary = Color3.fromRGB(25, 75, 215),   Secondary = Color3.fromRGB(135, 210, 255), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "PURPLE",        Primary = Color3.fromRGB(110, 25, 185),  Secondary = Color3.fromRGB(220, 155, 255), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	-- GREENSCOPE: Vung danh dau xanh la + Con lai trang mo + Dan/tia 2 mau Xanh la + Trang Neon
+	{ Name = "GREENSCOPE",    Primary = Color3.fromRGB(28, 175, 75),   Secondary = MATTE_WHITE,     Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = MATTE_WHITE_MAT,              BarrelMat = Enum.Material.CorrodedMetal, DualBullet = true  },
+	-- LIGHTSCOPE: Vung danh dau vang + Con lai trang mo + Dan/tia 2 mau Vang + Trang Neon
+	{ Name = "LIGHTSCOPE",    Primary = Color3.fromRGB(245, 195, 15),  Secondary = MATTE_WHITE,     Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = MATTE_WHITE_MAT,              BarrelMat = Enum.Material.CorrodedMetal, DualBullet = true  },
+	{ Name = "SPARKLESCOPE",  Primary = Color3.fromRGB(235, 130, 15),  Secondary = Color3.fromRGB(255, 240, 120), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "PAWSCOPE",      Primary = Color3.fromRGB(225, 90, 35),   Secondary = Color3.fromRGB(255, 195, 155), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "AEROSCOPE",     Primary = Color3.fromRGB(35, 150, 230),  Secondary = MATTE_WHITE,     Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "CYANSCOPE",     Primary = Color3.fromRGB(10, 155, 195),  Secondary = MATTE_WHITE,     Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "PULSESCOPE",    Primary = Color3.fromRGB(175, 20, 105),  Secondary = Color3.fromRGB(255, 125, 205), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "NEBULASCOPE",   Primary = Color3.fromRGB(55, 35, 155),   Secondary = Color3.fromRGB(130, 220, 255), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "SYNTHSCOPE",    Primary = Color3.fromRGB(135, 45, 220),  Secondary = Color3.fromRGB(255, 105, 225), Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "IMMORTALSCOPE", Primary = Color3.fromRGB(205, 65, 15),   Secondary = Color3.fromRGB(255, 195, 70),  Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "MAGMASCOPE",    Primary = Color3.fromRGB(165, 20, 20),   Secondary = Color3.fromRGB(255, 140, 30),  Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "PINKSCOPEV2",   Primary = Color3.fromRGB(215, 40, 135),  Secondary = MATTE_WHITE,     Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "VOIDSCOPE",     Primary = Color3.fromRGB(18, 12, 28),    Secondary = Color3.fromRGB(165, 85, 255),  Barrel = DARK_IRON,   Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "ROSESCOPE",     Primary = Color3.fromRGB(220, 75, 145),  Secondary = MATTE_WHITE,     Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "WHITESCOPE",    Primary = MATTE_WHITE,                 Secondary = MATTE_WHITE,     Barrel = SILVER_IRON, Mat1 = MATTE_WHITE_MAT,              Mat2 = MATTE_WHITE_MAT,              BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+	{ Name = "GHOSTSCOPE",    Primary = Color3.fromRGB(115, 225, 205), Secondary = MATTE_WHITE,     Barrel = SILVER_IRON, Mat1 = Enum.Material.SmoothPlastic, Mat2 = Enum.Material.Neon,          BarrelMat = Enum.Material.CorrodedMetal, DualBullet = false },
+}
+
+local StyleMap = {}
+for _, info in ipairs(STYLES) do
+	StyleMap[info.Name] = info
+end
+
+local OriginalData = {}
+
+local function isCharacterBodyPart(part)
+	if not part:IsA("BasePart") then return true end
+	local char = LocalPlayer.Character
+	if char and part:IsDescendantOf(char) and not part:FindFirstAncestorOfClass("Tool") then
+		local n = part.Name:lower()
+		if n:find("hand") or n:find("arm") or n:find("leg") or n:find("foot")
+			or n:find("torso") or n:find("head") or n:find("humanoidrootpart") then
+			return true
+		end
+	end
+	return false
+end
+
+local function snapshot(obj)
+	if OriginalData[obj] then return end
+	if obj:IsA("BasePart") then
+		OriginalData[obj] = { Type = "Part", Color = obj.Color, Material = obj.Material }
+	elseif obj:IsA("SpecialMesh") then
+		OriginalData[obj] = { Type = "Mesh", VertexColor = obj.VertexColor }
+	elseif obj:IsA("Decal") or obj:IsA("Texture") then
+		OriginalData[obj] = { Type = "Decal", Color3 = obj.Color3 }
+	elseif obj:IsA("SurfaceAppearance") then
+		OriginalData[obj] = { Type = "Surface", Color = obj.Color }
+	end
+end
+
+-- Phan chia vung tren sung theo net ve LIGHTSCOPE / GREENSCOPE:
+-- Vung danh dau (khung/ruot/nong/vien/chi tiet) -> Primary; phan con lai -> MATTE_WHITE
+local function pickPartStyle(styleName, part, st, index)
+	local n = part.Name:lower()
+
+	if styleName == "LIGHTSCOPE" or styleName == "GREENSCOPE" then
+		local isMarkedRegion = n:find("scope") or n:find("sight") or n:find("neon") or n:find("glow")
+			or n:find("trim") or n:find("accent") or n:find("barrel") or n:find("muzzle") or n:find("rail")
+			or n:find("stock") or n:find("grip") or n:find("frame") or n:find("guard")
+			or (index % 2 == 1)
+		if isMarkedRegion then
+			return st.Primary, Enum.Material.SmoothPlastic
+		else
+			return MATTE_WHITE, MATTE_WHITE_MAT
+		end
+	end
+
+	local isBarrelOrSupport = n:find("barrel") or n:find("guard") or n:find("rail") or n:find("support")
+		or n:find("mount") or n:find("spring") or n:find("muzzle") or n:find("bolt") or n:find("iron") or n:find("silver")
+	if isBarrelOrSupport then
+		return st.Barrel, st.BarrelMat
+	end
+
+	local isSecondaryPart = n:find("scope") or n:find("sight") or n:find("neon") or n:find("glow")
+		or n:find("trim") or n:find("accent") or n:find("stock") or n:find("grip") or (index % 3 == 0)
+	if isSecondaryPart then
+		return st.Secondary, st.Mat2
+	end
+
+	return st.Primary, st.Mat1
+end
+
+local function applyStyleToGun(target, styleName)
+	if not target then return end
+	local st = StyleMap[styleName] or StyleMap["NORMAL"]
+	local idx = 0
+
+	local function paintPart(part)
+		if isCharacterBodyPart(part) then return end
+		idx += 1
+		snapshot(part)
+
+		if styleName == "NORMAL" then
+			local orig = OriginalData[part]
+			if orig and orig.Type == "Part" then
+				part.Color = orig.Color
+				part.Material = orig.Material
+			end
+		else
+			local c, m = pickPartStyle(styleName, part, st, idx)
+			part.Color = c
+			part.Material = m
+		end
+
+		for _, child in ipairs(part:GetChildren()) do
+			snapshot(child)
+			if child:IsA("SpecialMesh") then
+				if styleName == "NORMAL" then
+					local orig = OriginalData[child]
+					if orig and orig.Type == "Mesh" then
+						child.VertexColor = orig.VertexColor
+					end
+				else
+					local c = pickPartStyle(styleName, part, st, idx)
+					child.VertexColor = Vector3.new(c.R, c.G, c.B)
+				end
+			elseif child:IsA("Decal") or child:IsA("Texture") then
+				snapshot(child)
+				child.Color3 = (styleName == "NORMAL")
+					and (OriginalData[child] and OriginalData[child].Color3 or Color3.new(1, 1, 1))
+					or st.Secondary
+			elseif child:IsA("SurfaceAppearance") then
+				snapshot(child)
+				child.Color = (styleName == "NORMAL")
+					and (OriginalData[child] and OriginalData[child].Color or Color3.new(1, 1, 1))
+					or st.Primary
+			end
+		end
+	end
+
+	if target:IsA("BasePart") then
+		paintPart(target)
+	end
+
+	for _, desc in ipairs(target:GetDescendants()) do
+		if desc:IsA("BasePart") then
+			paintPart(desc)
+		elseif (desc:IsA("Decal") or desc:IsA("Texture")) and not (desc.Parent and isCharacterBodyPart(desc.Parent)) then
+			snapshot(desc)
+			desc.Color3 = (styleName == "NORMAL")
+				and (OriginalData[desc] and OriginalData[desc].Color3 or Color3.new(1, 1, 1))
+				or st.Secondary
+		elseif desc:IsA("SurfaceAppearance") and not (desc.Parent and isCharacterBodyPart(desc.Parent)) then
+			snapshot(desc)
+			desc.Color = (styleName == "NORMAL")
+				and (OriginalData[desc] and OriginalData[child] and OriginalData[desc].Color or Color3.new(1, 1, 1))
+				or st.Primary
+		elseif desc:IsA("ParticleEmitter") or desc:IsA("Trail") or desc:IsA("Beam") then
+			desc.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, st.Primary),
+				ColorSequenceKeypoint.new(1, st.Secondary),
+			})
+		end
+	end
+end
+
+-- Doi mau dan / tia dan / vet dan khi ban (dac biet LIGHTSCOPE: Vang+Trang Neon, GREENSCOPE: Xanh la+Trang Neon)
+local function isBulletLike(obj)
+	local n = obj.Name:lower()
+	return n:find("bullet") or n:find("projectile") or n:find("tracer") or n:find("laser")
+		or n:find("bolt") or n:find("slug") or n:find("pellet") or n:find("beam") or n:find("shot")
+end
+
+local function styleBulletObject(obj, styleName)
+	if styleName == "NORMAL" then return end
+	local st = StyleMap[styleName]
+	if not st then return end
+
+	local c1 = st.Primary
+	local c2 = (styleName == "LIGHTSCOPE" or styleName == "GREENSCOPE") and MATTE_WHITE or st.Secondary
+
+	local function paintBulletNode(node)
+		if node:IsA("BasePart") then
+			node.Material = Enum.Material.Neon
+			-- Ket hop 2 mau cung luc: nen Primary + vien/tia/vet Secondary Neon
+			node.Color = c1
+			if not node:FindFirstChild("NhiizDualNeonCore") then
+				local core = Instance.new("SelectionBox")
+				core.Name = "NhiizDualNeonCore"
+				core.Adornee = node
+				core.Color3 = c2
+				core.LineThickness = 0.04
+				core.SurfaceColor3 = c2
+				core.SurfaceTransparency = 0.65
+				core.Parent = node
+			end
+		elseif node:IsA("Beam") or node:IsA("Trail") or node:IsA("ParticleEmitter") then
+			node.LightEmission = 1
+			node.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, c1),
+				ColorSequenceKeypoint.new(0.5, c2),
+				ColorSequenceKeypoint.new(1, c1),
+			})
+		elseif node:IsA("PointLight") or node:IsA("SpotLight") or node:IsA("SurfaceLight") then
+			node.Color = c1
+		end
+	end
+
+	paintBulletNode(obj)
+	for _, d in ipairs(obj:GetDescendants()) do
+		paintBulletNode(d)
+	end
+end
+
+Workspace.DescendantAdded:Connect(function(desc)
+	if CurrentStyle == "NORMAL" then return end
+	local char = LocalPlayer.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	if isBulletLike(desc) or desc:IsA("Beam") or desc:IsA("Trail") then
+		local pos
+		if desc:IsA("BasePart") then
+			pos = desc.Position
+		elseif desc:IsA("Model") then
+			pos = desc:GetPivot().Position
+		elseif desc.Parent and desc.Parent:IsA("BasePart") then
+			pos = desc.Parent.Position
+		end
+		if pos and (pos - hrp.Position).Magnitude <= 140 then
+			task.defer(function()
+				if desc and desc.Parent then
+					styleBulletObject(desc, CurrentStyle)
+				end
+			end)
+		end
+	end
+end)
+
+local function getEquippedTool()
+	local char = LocalPlayer.Character
+	if not char then return nil end
+	for _, child in ipairs(char:GetChildren()) do
+		if child:IsA("Tool") then
+			return child
+		end
+	end
+	return nil
+end
+
+local function getRightWaistItems()
+	local char = LocalPlayer.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not char or not hrp then return {} end
+
+	local list = {}
+	for _, child in ipairs(char:GetChildren()) do
+		if not child:IsA("Tool") and (child:IsA("Accessory") or child:IsA("Model") or child:IsA("BasePart")) then
+			local n = child.Name:lower()
+			if n:find("hand") or n:find("arm") or n:find("leg") or n:find("foot") or n:find("torso") or n:find("head") then
+				continue
+			end
+			local namedHip = n:find("waist") or n:find("hip") or n:find("holster") or n:find("gun") or n:find("pistol") or n:find("rifle") or n:find("weapon") or n:find("scope")
+			local p = child:IsA("BasePart") and child or (child:IsA("Accessory") and child:FindFirstChild("Handle") or child:FindFirstChildWhichIsA("BasePart", true))
+			if p and not isCharacterBodyPart(p) then
+				local rel = hrp.CFrame:PointToObjectSpace(p.Position)
+				local inRightHip = (rel.X > 0.45 and rel.X < 1.85) and (rel.Y >= -1.35 and rel.Y <= 0.35) and (math.abs(rel.Z) <= 1.15)
+				if namedHip or inRightHip then
+					table.insert(list, child)
+				end
+			end
+		end
+	end
+	return list
+end
+
+local function findNearestGunDisplay()
+	local char = LocalPlayer.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return nil end
+
+	local best, bestDist = nil, math.huge
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		local ln = obj.Name:lower()
+		if (ln:find("gundisplay") or ln:find("gun_display") or ln:find("display") or ln:find("weaponstand")) and (obj:IsA("Model") or obj:IsA("BasePart")) then
+			local pos = obj:IsA("Model") and obj:GetPivot().Position or obj.Position
+			local d = (pos - hrp.Position).Magnitude
+			if d < bestDist then
+				bestDist = d
+				best = obj
+			end
+		end
+	end
+	return best, math.floor(bestDist)
+end
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NhiizScopeHubGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 240, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -120, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(168, 226, 188)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(36, 130, 74)
+MainStroke.Thickness = 2.5
+MainStroke.Parent = MainFrame
+
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, -12, 0, 32)
+Header.Position = UDim2.new(0, 6, 0, 6)
+Header.BackgroundColor3 = Color3.fromRGB(46, 148, 86)
+Header.BorderSizePixel = 0
+Header.Parent = MainFrame
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -36, 1, 0)
+TitleLabel.Position = UDim2.new(0, 8, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "SCOPE | " .. OWNER_ID
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 11
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = Header
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+CloseBtn.Position = UDim2.new(1, -27, 0.5, -11)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 55, 85)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 11
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = Header
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+local ReopenBtn = Instance.new("TextButton")
+ReopenBtn.Name = "ReopenBtn"
+ReopenBtn.Size = UDim2.new(0, 106, 0, 28)
+ReopenBtn.Position = UDim2.new(0, 12, 0.5, -14)
+ReopenBtn.BackgroundColor3 = Color3.fromRGB(46, 148, 86)
+ReopenBtn.Text = "OPEN (" .. OWNER_ID .. ")"
+ReopenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ReopenBtn.TextSize = 10
+ReopenBtn.Font = Enum.Font.GothamBold
+ReopenBtn.Visible = false
+ReopenBtn.Parent = ScreenGui
+Instance.new("UICorner", ReopenBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", ReopenBtn).Color = Color3.fromRGB(220, 252, 231)
+
+local function makeDraggable(handle, frame, onTap)
+	local dragging, moved = false, false
+	local dragInput, dragStart, startPos
+
+	handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging, moved = true, false
+			dragStart = input.Position
+			startPos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					local wasMoved = moved
+					dragging = false
+					if not wasMoved and onTap then
+						onTap()
+					end
+				end
+			end)
+		end
+	end)
+
+	handle.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input == dragInput then
+			local delta = input.Position - dragStart
+			if delta.Magnitude > 6 then moved = true end
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+CloseBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	ReopenBtn.Visible = true
+end)
+makeDraggable(ReopenBtn, ReopenBtn, function()
+	MainFrame.Visible = true
+	ReopenBtn.Visible = false
+end)
+makeDraggable(Header, MainFrame, nil)
+
+local CurrentLabel = Instance.new("TextLabel")
+CurrentLabel.Size = UDim2.new(1, -12, 0, 20)
+CurrentLabel.Position = UDim2.new(0, 6, 0, 42)
+CurrentLabel.BackgroundColor3 = Color3.fromRGB(238, 250, 242)
+CurrentLabel.Text = "STYLE: " .. CurrentStyle
+CurrentLabel.TextColor3 = Color3.fromRGB(25, 65, 42)
+CurrentLabel.TextSize = 10
+CurrentLabel.Font = Enum.Font.GothamBold
+CurrentLabel.Parent = MainFrame
+Instance.new("UICorner", CurrentLabel).CornerRadius = UDim.new(0, 6)
+
+local SelectActionBtn = Instance.new("TextButton")
+SelectActionBtn.Size = UDim2.new(1, -12, 0, 24)
+SelectActionBtn.Position = UDim2.new(0, 6, 0, 66)
+SelectActionBtn.BackgroundColor3 = Color3.fromRGB(37, 99, 235)
+SelectActionBtn.Text = "APPLY: " .. CurrentStyle
+SelectActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SelectActionBtn.TextSize = 10
+SelectActionBtn.Font = Enum.Font.GothamBold
+SelectActionBtn.Parent = MainFrame
+Instance.new("UICorner", SelectActionBtn).CornerRadius = UDim.new(0, 6)
+
+local GunDisplayBtn = Instance.new("TextButton")
+GunDisplayBtn.Size = UDim2.new(1, -12, 0, 24)
+GunDisplayBtn.Position = UDim2.new(0, 6, 0, 94)
+GunDisplayBtn.BackgroundColor3 = Color3.fromRGB(46, 148, 86)
+GunDisplayBtn.Text = "NEAREST GUNDISPLAY"
+GunDisplayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GunDisplayBtn.TextSize = 10
+GunDisplayBtn.Font = Enum.Font.GothamBold
+GunDisplayBtn.Parent = MainFrame
+Instance.new("UICorner", GunDisplayBtn).CornerRadius = UDim.new(0, 6)
+
+local ResetBtn = Instance.new("TextButton")
+ResetBtn.Size = UDim2.new(1, -12, 0, 22)
+ResetBtn.Position = UDim2.new(0, 6, 0, 122)
+ResetBtn.BackgroundColor3 = Color3.fromRGB(55, 65, 81)
+ResetBtn.Text = "RESET NORMAL"
+ResetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetBtn.TextSize = 10
+ResetBtn.Font = Enum.Font.GothamBold
+ResetBtn.Parent = MainFrame
+Instance.new("UICorner", ResetBtn).CornerRadius = UDim.new(0, 6)
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -12, 0, 16)
+StatusLabel.Position = UDim2.new(0, 6, 1, -18)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Ready | " .. OWNER_ID
+StatusLabel.TextColor3 = Color3.fromRGB(30, 75, 50)
+StatusLabel.TextSize = 9
+StatusLabel.Font = Enum.Font.GothamMedium
+StatusLabel.Parent = MainFrame
+
+local ScrollList = Instance.new("ScrollingFrame")
+ScrollList.Size = UDim2.new(1, -12, 1, -168)
+ScrollList.Position = UDim2.new(0, 6, 0, 148)
+ScrollList.BackgroundColor3 = Color3.fromRGB(235, 248, 240)
+ScrollList.BorderSizePixel = 0
+ScrollList.ScrollBarThickness = 4
+ScrollList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ScrollList.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollList.Parent = MainFrame
+Instance.new("UICorner", ScrollList).CornerRadius = UDim.new(0, 8)
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Padding = UDim.new(0, 4)
+ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+ListLayout.Parent = ScrollList
+
+local ListPad = Instance.new("UIPadding")
+ListPad.PaddingTop = UDim.new(0, 6)
+ListPad.PaddingBottom = UDim.new(0, 6)
+ListPad.PaddingLeft = UDim.new(0, 6)
+ListPad.PaddingRight = UDim.new(0, 6)
+ListPad.Parent = ScrollList
+
+local function setStyle(styleName)
+	CurrentStyle = styleName
+	local st = StyleMap[styleName] or StyleMap["NORMAL"]
+
+	CurrentLabel.Text = "STYLE: " .. styleName
+	SelectActionBtn.Text = "APPLY: " .. styleName
+	SelectActionBtn.BackgroundColor3 = st.Primary
+
+	for _, item in ipairs(getRightWaistItems()) do
+		applyStyleToGun(item, styleName)
+	end
+
+	local equipped = getEquippedTool()
+	if equipped then
+		ActiveGunTool = equipped
+		applyStyleToGun(ActiveGunTool, styleName)
+		task.delay(0.15, function()
+			if equipped and equipped.Parent and getEquippedTool() == equipped then
+				applyStyleToGun(equipped, styleName)
+			end
+		end)
+		StatusLabel.Text = styleName .. " -> [" .. ActiveGunTool.Name .. "]"
+	else
+		StatusLabel.Text = styleName .. " selected"
+	end
+end
+
+for _, st in ipairs(STYLES) do
+	local btn = Instance.new("TextButton")
+	btn.Name = st.Name
+	btn.Size = UDim2.new(1, 0, 0, 28)
+	btn.BackgroundColor3 = st.Primary
+	btn.Text = st.Name
+	btn.TextColor3 = (st.Name == "WHITESCOPE" or st.Name == "LIGHTSCOPE" or st.Name == "GHOSTSCOPE") and Color3.fromRGB(20, 20, 25) or Color3.fromRGB(255, 255, 255)
+	btn.TextSize = 11
+	btn.Font = Enum.Font.GothamBold
+	btn.Parent = ScrollList
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = st.Secondary
+	stroke.Thickness = 2
+	stroke.Parent = btn
+
+	btn.MouseButton1Click:Connect(function()
+		setStyle(st.Name)
+	end)
+end
+
+SelectActionBtn.MouseButton1Click:Connect(function()
+	setStyle(CurrentStyle)
+end)
+
+GunDisplayBtn.MouseButton1Click:Connect(function()
+	local target, dist = findNearestGunDisplay()
+	if target then
+		applyStyleToGun(target, CurrentStyle)
+		StatusLabel.Text = "Display: " .. target.Name .. " (" .. dist .. ")"
+	else
+		StatusLabel.Text = "No GunDisplay nearby"
+	end
+end)
+
+ResetBtn.MouseButton1Click:Connect(function()
+	setStyle("NORMAL")
+end)
+
+local function hookCharacter(character)
+	character.ChildAdded:Connect(function(child)
+		if child:IsA("Tool") then
+			ActiveGunTool = child
+			applyStyleToGun(child, CurrentStyle)
+			task.delay(0.15, function()
+				if child and child.Parent then
+					applyStyleToGun(child, CurrentStyle)
+				end
+			end)
+			child.DescendantAdded:Connect(function()
+				task.defer(function()
+					if child and child.Parent then
+						applyStyleToGun(child, CurrentStyle)
+					end
+				end)
+			end)
+			StatusLabel.Text = "Held: " .. child.Name .. " [" .. CurrentStyle .. "]"
+		end
+	end)
+end
+
+if LocalPlayer.Character then
+	hookCharacter(LocalPlayer.Character)
+end
+LocalPlayer.CharacterAdded:Connect(hookCharacter)
